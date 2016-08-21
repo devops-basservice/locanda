@@ -1,0 +1,49 @@
+- job:
+    name: locanda_jjb_<appndid>
+    project-type: freestyle
+    defaults: global
+    description: 'Build and Deploy of Locanda via JJB'
+    block-downstream: false
+    concurrent: true
+    node: master
+    properties:
+       - github:
+          url: https://github.com/kishorramanan/locanda.git
+    scm:
+       - git:
+          url: https://github.com/kishorramanan/locanda.git
+          branches:
+            - master
+          git-config-name: Kishore Ramanan
+          git-config-email: kishorramanan@gmail.com
+          extensions:
+            per-build-tag: true
+    triggers:
+       - pollscm:
+          cron: "* * * * *"
+    builders:
+       - maven-target:
+            maven-version: Maven3
+            pom: pom.xml
+            goals: clean package sonar:sonar -Dsonar.host.url=http://52.202.83.90:9001
+       #- shell: ssh -oStrictHostKeyChecking=no -i /usr/share/master.pem ubuntu@54.174.100.219 "ifconfig"
+       - shell: cd /var/jenkins/workspace/locanda_jjb_<appndid>/Locanda_target/Locanda_resources/solr/
+       - shell: scp -rp -oStrictHostKeyChecking=no -i /usr/share/master.pem "/var/jenkins/workspace/locanda_jjb_<appndid>/Locanda_target/Locanda_resources/" "ubuntu@54.174.100.219:/var/jenkins/workspace/locanda_jjb/Locanda_target/"
+       - shell: sleep 10
+       - shell: ssh -oStrictHostKeyChecking=no -i /usr/share/master.pem ubuntu@54.174.100.219 "/opt/tomcat/bin/shutdown.sh"
+       - shell: sleep 5
+       - shell: ssh -oStrictHostKeyChecking=no -i /usr/share/master.pem ubuntu@54.174.100.219 " rm -rf /opt/tomcat/webapps/Locan*"
+       - shell: scp -oStrictHostKeyChecking=no -i /usr/share/master.pem "/var/jenkins/workspace/locanda_jjb_<appndid>/Locanda_target/Locanda.war" "ubuntu@54.174.100.219:/opt/tomcat/webapps/"
+       - shell: ssh -oStrictHostKeyChecking=no -i /usr/share/master.pem ubuntu@54.174.100.219 "/opt/tomcat/bin/startup.sh"
+
+    publishers:
+       - logstash:
+          max-lines: -1
+          fail-build: false
+    wrappers:
+       - mask-passwords
+       - logstash:
+           use-redis: false
+
+- docker_image:
+    name: sinohore/basejenkins_maven_git_java
