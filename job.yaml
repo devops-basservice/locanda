@@ -14,7 +14,7 @@
           url: https://github.com/devops-basservice/locanda.git
           branches:
             - Kishor
-          git-config-name: Kishore
+          git-config-name: venkat
           git-config-email: kishorramanan@gmail.com
           extensions:
             per-build-tag: true
