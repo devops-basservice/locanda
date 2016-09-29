@@ -1,5 +1,5 @@
 - job:
-    name: locanda_jjb_<appndid>
+    name: locanda_jjb_<appndid>_yeah
     project-type: freestyle
     defaults: global
     description: 'Build and Deploy of Locanda via JJB - Kishor JJB - Test 3'
